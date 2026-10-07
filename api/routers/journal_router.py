@@ -125,7 +125,11 @@ async def delete_entry(entry_id: str, entry_service: EntryServiceDependency) -> 
     #
     # Steps to implement:
     # 1. Use await entry_service.delete_entry(entry_id) exactly once.
+    result = await entry_service.delete_entry(entry_id)
     # 2. If it returns False, raise HTTPException with status_code=404.
+    if not result:
+        raise HTTPException(status_code=404)
+    raise HTTPException(status_code=200, detail="Entry deleted successfully")
     # 3. Return DetailResponse(detail="Entry deleted successfully") (status 200).
     #
     # The repository atomically deletes the row and reports whether it existed.
