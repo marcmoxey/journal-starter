@@ -14,6 +14,7 @@ from api.models.entry import (
     EntryCreate,
     EntryCreatedResponse,
     EntryListResponse,
+    EntryUpdate,
 )
 from api.repositories.interface_repository import DatabaseInterface
 from api.services.entry_service import EntryService
@@ -100,7 +101,7 @@ async def get_entry(entry_id: str, entry_service: EntryServiceDependency) -> Ent
 
 @router.patch("/entries/{entry_id}")
 async def update_entry(
-    entry_id: str, entry_update: dict[str, str], entry_service: EntryServiceDependency
+    entry_id: str, entry_update: EntryUpdate, entry_service: EntryServiceDependency
 ) -> Entry:
     """Update a journal entry."""
     # TODO (Task 2): Replace ``entry_update: dict[str, str]`` with ``entry_update: EntryUpdate``
@@ -111,7 +112,7 @@ async def update_entry(
     # would overwrite omitted fields with their defaults.
     # An empty object is allowed and leaves the text fields unchanged.
     # See ``TestUpdateEntry`` in tests/test_api.py and docs/06-input-validation.md.
-    result = await entry_service.update_entry(entry_id, entry_update)
+    result = await entry_service.update_entry(entry_id, entry_update.model_dump(exclude_unset=True))
     if result is None:
         raise HTTPException(status_code=404, detail="Entry not found")
 
@@ -125,7 +126,11 @@ async def delete_entry(entry_id: str, entry_service: EntryServiceDependency) -> 
     #
     # Steps to implement:
     # 1. Use await entry_service.delete_entry(entry_id) exactly once.
+    result = await entry_service.delete_entry(entry_id)
     # 2. If it returns False, raise HTTPException with status_code=404.
+    if not result:
+        raise HTTPException(status_code=404)
+    raise HTTPException(status_code=200, detail="Entry deleted successfully")
     # 3. Return DetailResponse(detail="Entry deleted successfully") (status 200).
     #
     # The repository atomically deletes the row and reports whether it existed.
